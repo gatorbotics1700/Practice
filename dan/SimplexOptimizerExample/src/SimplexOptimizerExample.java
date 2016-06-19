@@ -14,7 +14,8 @@ import org.apache.commons.math3.util.FastMath;
 public class SimplexOptimizerExample {
 	public static void main(String[] args) {
 		solveSimple();
-		solveComplex();
+		solveLine();
+		solveCircle();
 	}
 	
 	public static void solveSimple() {
@@ -72,7 +73,58 @@ public class SimplexOptimizerExample {
 		}
 	}
 	
-	public static void solveComplex() {
+	public static void solveLine() {
+		SimplexOptimizer optimizer = new SimplexOptimizer(1e-10, 1e-30);
+
+		// The best fit should be the line y = x
+		double[] xVals = {-1.0, 0.0, 1.0};
+		double[] yVals = {-1.0, 0.0, 1.0};
+		
+		final LineFit line = new LineFit(xVals, yVals);
+
+		final PointValuePair optimum = optimizer.optimize(
+				new MaxEval(10000),
+				new ObjectiveFunction(line),
+				GoalType.MINIMIZE,
+				new InitialGuess(new double[] {
+						Math.random(), Math.random()}), 
+				new NelderMeadSimplex(2));
+
+		System.out.println(Arrays.toString(
+				optimum.getPoint()) + " : " + optimum.getSecond());
+	}
+
+	private static class LineFit implements MultivariateFunction {
+		// This time, we'll fit a circle to a series of points.
+		private double[] xVals, yVals;
+		
+		LineFit(double[] xVals, double[] yVals) {
+			super();
+			this.xVals = xVals;
+			this.yVals = yVals;
+		}
+		
+		// Here, the variables will be the parameters for a circle.
+		public double value(double[] variables) {
+			final double slope = variables[0];
+			final double intercept = variables[1];
+			double error = 0;
+			for (int point_index = 0; point_index < xVals.length; point_index++) {
+				double pointX = xVals[point_index];
+				double pointY = yVals[point_index];
+				
+				double lineY = slope * pointX + intercept;
+				double errorY = lineY - pointY;
+				double pointError = Math.sqrt(errorY * errorY);
+				
+				// The error for the guess is the sum of the errors for each point.
+				error += pointError;
+			}
+			return error;
+		}
+	}
+	
+	public static void solveCircle() {
 		SimplexOptimizer optimizer = new SimplexOptimizer(1e-10, 1e-30);
 
 		// The best fit should be a circle centered at (0,0) with radius 1.
