@@ -13,9 +13,7 @@ import org.apache.commons.math3.util.FastMath;
 
 public class SimplexOptimizerExample {
 	public static void main(String[] args) {
-		solveSimple();
-		solveLine();
-		solveCircle();
+		solveParabola();
 	}
 	
 	public static void solveSimple() {
@@ -146,6 +144,7 @@ public class SimplexOptimizerExample {
 	}
 
 	private static class CircleFit implements MultivariateFunction {
+
 		// This time, we'll fit a circle to a series of points.
 		private double[] xVals, yVals;
 		
@@ -181,6 +180,32 @@ public class SimplexOptimizerExample {
 				// The error for the guess is the sum of the errors for each point.
 				error += pointError;
 			}
+			return error;
+		}
+	}
+	
+	public static void solveParabola() {
+		SimplexOptimizer optimizer = new SimplexOptimizer(1e-10, 1e-30);
+		
+		final ParabolaFit parabola = new ParabolaFit();
+
+		final PointValuePair optimum = optimizer.optimize(
+				new MaxEval(10),
+				new ObjectiveFunction(parabola),
+				GoalType.MINIMIZE,
+				new InitialGuess(new double[] {1.5}), 
+				new NelderMeadSimplex(1));
+
+		System.out.println(Arrays.toString(
+				optimum.getPoint()) + " : " + optimum.getSecond());
+	}
+	
+	private static class ParabolaFit implements MultivariateFunction {
+		
+		public double value(double[] x) {
+			System.out.println(x[0]);
+			double error = x[0] * (x[0]-1) * (x[0] + 1);
+			System.out.println(error);
 			return error;
 		}
 	}
